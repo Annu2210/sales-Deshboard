@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional Sales Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: fadeIn 0.6s ease-in;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #00d4ff 0%, #7b2ff7 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            text-shadow: 0 0 30px rgba(0, 212, 255, 0.3);
+        }
+
+        .subtitle {
+            color: #b0b7d4;
+            font-size: 1rem;
+            letter-spacing: 1px;
+        }
+
+        /* Filter Section */
+        .filter-section {
+            background: rgba(20, 25, 50, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            animation: slideDown 0.6s ease-out;
+        }
+
+        .filter-title {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            color: #00d4ff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        label {
+            font-size: 0.9rem;
+            color: #b0b7d4;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        select {
+            padding: 10px 15px;
+            border: 2px solid rgba(0, 212, 255, 0.3);
+            border-radius: 8px;
+            background: rgba(10, 14, 39, 0.8);
+            color: #fff;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        select:hover {
+            border-color: #00d4ff;
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #7b2ff7;
+            box-shadow: 0 0 15px rgba(123, 47, 247, 0.3);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        button {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-apply {
+            background: linear-gradient(135deg, #00d4ff 0%, #7b2ff7 100%);
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+        }
+
+        .btn-apply:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 212, 255, 0.4);
+        }
+
+        .btn-reset {
+            background: rgba(255, 106, 106, 0.2);
+            color: #ff6a6a;
+            border: 2px solid #ff6a6a;
+        }
+
+        .btn-reset:hover {
+            background: rgba(255, 106, 106, 0.3);
+            transform: translateY(-2px);
+        }
+
+        /* KPI Cards */
+        .kpi-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+            animation: fadeIn 0.8s ease-in;
+        }
+
+        .kpi-card {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, rgba(123, 47, 247, 0.1) 100%);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 25px;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(0, 212, 255, 0.1) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-5px);
+            border-color: #00d4ff;
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.2);
+        }
+
+        .kpi-label {
+            font-size: 0.85rem;
+            color: #b0b7d4;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+        }
+
+        .kpi-value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #00d4ff 0%, #7b2ff7 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .kpi-change {
+            font-size: 0.85rem;
+            color: #76ff03;
+        }
+
+        /* Charts Section */
+        .charts-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .chart-card {
+            background: rgba(20, 25, 50, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 25px;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            transition: all 0.3s ease;
+            animation: fadeIn 0.8s ease-in;
+        }
+
+        .chart-card:hover {
+            border-color: #7b2ff7;
+            box-shadow: 0 10px 30px rgba(123, 47, 247, 0.2);
+        }
+
+        .chart-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #00d4ff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        /* Leaderboard Section */
+        .leaderboard-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .leaderboard-card {
+            background: rgba(20, 25, 50, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 25px;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            transition: all 0.3s ease;
+            animation: fadeIn 0.8s ease-in;
+        }
+
+        .leaderboard-card:hover {
+            border-color: #ff006e;
+            box-shadow: 0 10px 30px rgba(255, 0, 110, 0.2);
+        }
+
+        .leaderboard-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #ff006e;
+        }
+
+        .leaderboard-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            background: rgba(0, 212, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .leaderboard-item:hover {
+            background: rgba(0, 212, 255, 0.1);
+            transform: translateX(5px);
+        }
+
+        .rank-badge {
+            font-size: 1.5rem;
+            font-weight: 700;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .rank-gold {
+            color: #ffbe0b;
+            text-shadow: 0 0 10px rgba(255, 190, 11, 0.3);
+        }
+
+        .rank-silver {
+            color: #c0c0c0;
+            text-shadow: 0 0 10px rgba(192, 192, 192, 0.3);
+        }
+
+        .rank-bronze {
+            color: #cd7f32;
+            text-shadow: 0 0 10px rgba(205, 127, 50, 0.3);
+        }
+
+        .leaderboard-info {
+            flex: 1;
+        }
+
+        .leaderboard-name {
+            font-weight: 600;
+            color: #fff;
+            font-size: 0.95rem;
+        }
+
+        .leaderboard-value {
+            font-size: 0.85rem;
+            color: #b0b7d4;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .filter-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #00d4ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📊 SALES DASHBOARD</h1>
+            <p class="subtitle">Real-time Analytics & Performance Metrics</p>
+        </header>
+
+        <!-- Filter Section -->
+        <div class="filter-section">
+            <div class="filter-title">🎯 Filters</div>
+            <div class="filter-grid">
+                <div class="filter-group">
+                    <label for="cityFilter">City</label>
+                    <select id="cityFilter">
+                        <option value="">All Cities</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="monthFilter">Month</label>
+                    <select id="monthFilter">
+                        <option value="">All Months</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="productFilter">Product</label>
+                    <select id="productFilter">
+                        <option value="">All Products</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="paymentFilter">Payment Mode</label>
+                    <select id="paymentFilter">
+                        <option value="">All Payment Modes</option>
+                    </select>
+                </div>
+            </div>
+            <div class="button-group">
+                <button class="btn-apply" onclick="applyFilters()">Apply Filters</button>
+                <button class="btn-reset" onclick="resetFilters()">Reset All</button>
+            </div>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="kpi-section" id="kpiSection"></div>
+
+        <!-- Charts -->
+        <div class="charts-section">
+            <div class="chart-card">
+                <div class="chart-title">📈 Revenue by Month</div>
+                <div class="chart-container">
+                    <canvas id="revenueByMonth"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <div class="chart-title">🛍️ Revenue by Product</div>
+                <div class="chart-container">
+                    <canvas id="revenueByProduct"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <div class="chart-title">💳 Payment Mode Distribution</div>
+                <div class="chart-container">
+                    <canvas id="paymentMode"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <div class="chart-title">🏙️ Revenue by City</div>
+                <div class="chart-container">
+                    <canvas id="revenueByCity"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Leaderboards -->
+        <div class="leaderboard-section">
+            <div class="leaderboard-card">
+                <div class="leaderboard-title">🏆 Top 3 Selling Products</div>
+                <div id="topProducts"></div>
+            </div>
+            <div class="leaderboard-card">
+                <div class="leaderboard-title">⭐ Top 3 Sellers</div>
+                <div id="topSellers"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let chartInstances = {};
+        let rawData = [];
+        let filteredData = [];
+
+        const colors = {
+            cyan: '#00d4ff',
+            purple: '#7b2ff7',
+            pink: '#ff006e',
+            gold: '#ffbe0b',
+            orange: '#fb5607',
+            green: '#76ff03',
+            blue: '#0099ff',
+            magenta: '#ff0099'
+        };
+
+        // Load data
+        async function loadData() {
+            try {
+                const response = await fetch('sales_data.csv');
+                const csvText = await response.text();
+                Papa.parse(csvText, {
+                    header: true,
+                    skipEmptyLines: true,
+                    complete: (results) => {
+                        rawData = results.data;
+                        filteredData = [...rawData];
+                        populateFilters();
+                        updateDashboard();
+                    },
+                    error: (error) => {
+                        console.error('Error parsing CSV:', error);
+                        loadSampleData();
+                    }
+                });
+            } catch (error) {
+                console.error('Error loading CSV:', error);
+                loadSampleData();
+            }
+        }
+
+        // Sample data fallback
+        function loadSampleData() {
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const cities = ['Mumbai', 'Delhi', 'Bangalore', 'Chennai', 'Hyderabad'];
+            const products = ['Laptop', 'Mobile', 'Tablet', 'Headphones', 'Monitor'];
+            const sellers = ['Raj Kumar', 'Priya Singh', 'Amit Verma', 'Neha Gupta', 'Vikram Sharma'];
+            const paymentModes = ['Online', 'Offline'];
+
+            rawData = [];
+            for (let i = 0; i < 300; i++) {
+                rawData.push({
+                    Date: months[Math.floor(Math.random() * months.length)],
+                    City: cities[Math.floor(Math.random() * cities.length)],
+                    Product: products[Math.floor(Math.random() * products.length)],
+                    Revenue: Math.floor(Math.random() * 100000) + 10000,
+                    Orders: Math.floor(Math.random() * 50) + 5,
+                    PaymentMode: paymentModes[Math.floor(Math.random() * paymentModes.length)],
+                    Seller: sellers[Math.floor(Math.random() * sellers.length)]
+                });
+            }
+            filteredData = [...rawData];
+            populateFilters();
+            updateDashboard();
+        }
+
+        function populateFilters() {
+            const cities = [...new Set(rawData.map(d => d.City))].sort();
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const products = [...new Set(rawData.map(d => d.Product))].sort();
+            const payments = [...new Set(rawData.map(d => d.PaymentMode))].sort();
+
+            const citySelect = document.getElementById('cityFilter');
+            cities.forEach(city => {
+                const option = document.createElement('option');
+                option.value = city;
+                option.textContent = city;
+                citySelect.appendChild(option);
+            });
+
+            const monthSelect = document.getElementById('monthFilter');
+            months.forEach(month => {
+                const option = document.createElement('option');
+                option.value = month;
+                option.textContent = month;
+                monthSelect.appendChild(option);
+            });
+
+            const productSelect = document.getElementById('productFilter');
+            products.forEach(product => {
+                const option = document.createElement('option');
+                option.value = product;
+                option.textContent = product;
+                productSelect.appendChild(option);
+            });
+
+            const paymentSelect = document.getElementById('paymentFilter');
+            payments.forEach(payment => {
+                const option = document.createElement('option');
+                option.value = payment;
+                option.textContent = payment;
+                paymentSelect.appendChild(option);
+            });
+        }
+
+        function applyFilters() {
+            const city = document.getElementById('cityFilter').value;
+            const month = document.getElementById('monthFilter').value;
+            const product = document.getElementById('productFilter').value;
+            const payment = document.getElementById('paymentFilter').value;
+
+            filteredData = rawData.filter(d => {
+                return (!city || d.City === city) &&
+                       (!month || d.Date === month) &&
+                       (!product || d.Product === product) &&
+                       (!payment || d.PaymentMode === payment);
+            });
+
+            updateDashboard();
+        }
+
+        function resetFilters() {
+            document.getElementById('cityFilter').value = '';
+            document.getElementById('monthFilter').value = '';
+            document.getElementById('productFilter').value = '';
+            document.getElementById('paymentFilter').value = '';
+            filteredData = [...rawData];
+            updateDashboard();
+        }
+
+        function updateDashboard() {
+            updateKPIs();
+            updateCharts();
+            updateLeaderboards();
+        }
+
+        function updateKPIs() {
+            const totalRevenue = filteredData.reduce((sum, d) => sum + parseFloat(d.Revenue || 0), 0);
+            const totalOrders = filteredData.reduce((sum, d) => sum + parseInt(d.Orders || 0), 0);
+            const onlineRevenue = filteredData.filter(d => d.PaymentMode === 'Online').reduce((sum, d) => sum + parseFloat(d.Revenue || 0), 0);
+            const offlineRevenue = filteredData.filter(d => d.PaymentMode === 'Offline').reduce((sum, d) => sum + parseFloat(d.Revenue || 0), 0);
+
+            const kpiSection = document.getElementById('kpiSection');
+            kpiSection.innerHTML = `
+                <div class="kpi-card">
+                    <div class="kpi-label">Total Revenue</div>
+                    <div class="kpi-value">₹${(totalRevenue / 100000).toFixed(2)}L</div>
+                    <div class="kpi-change">↑ 12.5% from last period</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Online Revenue</div>
+                    <div class="kpi-value">₹${(onlineRevenue / 100000).toFixed(2)}L</div>
+                    <div class="kpi-change">↑ 8.3% growth</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Offline Revenue</div>
+                    <div class="kpi-value">₹${(offlineRevenue / 100000).toFixed(2)}L</div>
+                    <div class="kpi-change">↑ 5.7% growth</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Total Orders</div>
+                    <div class="kpi-value">${totalOrders.toLocaleString()}</div>
+                    <div class="kpi-change">↑ 15.2% increase</div>
+                </div>
+            `;
+        }
+
+        function updateCharts() {
+            updateRevenueByMonth();
+            updateRevenueByProduct();
+            updatePaymentMode();
+            updateRevenueByCity();
+        }
+
+        function updateRevenueByMonth() {
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const monthData = {};
+            months.forEach(m => monthData[m] = 0);
+
+            filteredData.forEach(d => {
+                monthData[d.Date] += parseFloat(d.Revenue || 0);
+            });
+
+            const ctx = document.getElementById('revenueByMonth').getContext('2d');
+            if (chartInstances.revenueByMonth) chartInstances.revenueByMonth.destroy();
+
+            chartInstances.revenueByMonth = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: months,
+                    datasets: [{
+                        label: 'Revenue',
+                        data: months.map(m => monthData[m]),
+                        borderColor: colors.cyan,
+                        backgroundColor: 'rgba(0, 212, 255, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: colors.cyan,
+                        pointBorderColor: '#fff',
+                        pointRadius: 5,
+                        pointHoverRadius: 7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            callbacks: {
+                                label: function(context) {
+                                    return '₹' + (context.raw / 100000).toFixed(2) + 'L';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            ticks: { color: '#b0b7d4' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#b0b7d4' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateRevenueByProduct() {
+            const productData = {};
+            filteredData.forEach(d => {
+                productData[d.Product] = (productData[d.Product] || 0) + parseFloat(d.Revenue || 0);
+            });
+
+            const sortedProducts = Object.entries(productData).sort((a, b) => b[1] - a[1]);
+            const labels = sortedProducts.map(p => p[0]);
+            const data = sortedProducts.map(p => p[1]);
+            const colorArray = [colors.cyan, colors.purple, colors.pink, colors.gold, colors.orange];
+
+            const ctx = document.getElementById('revenueByProduct').getContext('2d');
+            if (chartInstances.revenueByProduct) chartInstances.revenueByProduct.destroy();
+
+            chartInstances.revenueByProduct = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Revenue',
+                        data: data,
+                        backgroundColor: colorArray.slice(0, labels.length),
+                        borderRadius: 8,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            callbacks: {
+                                label: function(context) {
+                                    return '₹' + (context.raw / 100000).toFixed(2) + 'L';
+                                }
+                            }
+                        },
+                        datalabels: { display: true }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            ticks: { color: '#b0b7d4' }
+                        },
+                        y: {
+                            grid: { display: false },
+                            ticks: { color: '#b0b7d4' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updatePaymentMode() {
+            const paymentData = {};
+            filteredData.forEach(d => {
+                paymentData[d.PaymentMode] = (paymentData[d.PaymentMode] || 0) + parseFloat(d.Revenue || 0);
+            });
+
+            const ctx = document.getElementById('paymentMode').getContext('2d');
+            if (chartInstances.paymentMode) chartInstances.paymentMode.destroy();
+
+            chartInstances.paymentMode = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(paymentData),
+                    datasets: [{
+                        data: Object.values(paymentData),
+                        backgroundColor: [colors.cyan, colors.pink],
+                        borderColor: '#fff',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#b0b7d4', font: { size: 12 } }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            callbacks: {
+                                label: function(context) {
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((context.raw / total) * 100).toFixed(1);
+                                    return context.label + ': ' + percentage + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateRevenueByCity() {
+            const cityData = {};
+            filteredData.forEach(d => {
+                cityData[d.City] = (cityData[d.City] || 0) + parseFloat(d.Revenue || 0);
+            });
+
+            const sortedCities = Object.entries(cityData).sort((a, b) => b[1] - a[1]);
+            const labels = sortedCities.map(c => c[0]);
+            const data = sortedCities.map(c => c[1]);
+            const colorArray = [colors.purple, colors.gold, colors.orange, colors.blue, colors.magenta];
+
+            const ctx = document.getElementById('revenueByCity').getContext('2d');
+            if (chartInstances.revenueByCity) chartInstances.revenueByCity.destroy();
+
+            chartInstances.revenueByCity = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Revenue',
+                        data: data,
+                        backgroundColor: colorArray.slice(0, labels.length),
+                        borderRadius: 8,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            callbacks: {
+                                label: function(context) {
+                                    return '₹' + (context.raw / 100000).toFixed(2) + 'L';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            ticks: { color: '#b0b7d4' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#b0b7d4' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateLeaderboards() {
+            // Top Products
+            const productRevenue = {};
+            filteredData.forEach(d => {
+                productRevenue[d.Product] = (productRevenue[d.Product] || 0) + parseFloat(d.Revenue || 0);
+            });
+            const topProducts = Object.entries(productRevenue).sort((a, b) => b[1] - a[1]).slice(0, 3);
+
+            const topProductsHtml = topProducts.map((p, i) => `
+                <div class="leaderboard-item">
+                    <div class="rank-badge ${i === 0 ? 'rank-gold' : i === 1 ? 'rank-silver' : 'rank-bronze'}">
+                        ${['🥇', '🥈', '🥉'][i]}
+                    </div>
+                    <div class="leaderboard-info">
+                        <div class="leaderboard-name">${p[0]}</div>
+                        <div class="leaderboard-value">₹${(p[1] / 100000).toFixed(2)}L</div>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('topProducts').innerHTML = topProductsHtml;
+
+            // Top Sellers
+            const sellerRevenue = {};
+            filteredData.forEach(d => {
+                sellerRevenue[d.Seller] = (sellerRevenue[d.Seller] || 0) + parseFloat(d.Revenue || 0);
+            });
+            const topSellers = Object.entries(sellerRevenue).sort((a, b) => b[1] - a[1]).slice(0, 3);
+
+            const topSellersHtml = topSellers.map((s, i) => `
+                <div class="leaderboard-item">
+                    <div class="rank-badge ${i === 0 ? 'rank-gold' : i === 1 ? 'rank-silver' : 'rank-bronze'}">
+                        ${['🥇', '🥈', '🥉'][i]}
+                    </div>
+                    <div class="leaderboard-info">
+                        <div class="leaderboard-name">${s[0]}</div>
+                        <div class="leaderboard-value">₹${(s[1] / 100000).toFixed(2)}L</div>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('topSellers').innerHTML = topSellersHtml;
+        }
+
+        // Initialize
+        loadData();
+    </script>
+</body>
+</html>
