@@ -75,7 +75,7 @@
       display: flex; align-items: center; justify-content: center;
       color: #fff; font-size: 18px; font-weight: 700;
     }
-    .header h1 { font-size: 18px; font-weight: 700; letter-spacing: -.3px; }
+    .header-title { font-size: 18px; font-weight: 700; letter-spacing: -.3px; }
     .header-subtitle { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
     .header-right { display: flex; align-items: center; gap: 10px; }
 
@@ -347,7 +347,7 @@
   <div class="header-left">
     <div class="logo">S</div>
     <div>
-      <div class="header h1" style="font-size:16px;font-weight:700;">SalesPulse Dashboard</div>
+      <div class="header-title" style="font-size:16px;font-weight:700;">SalesPulse Dashboard</div>
       <div class="header-subtitle">Interactive Analytics · FY 2023–2024</div>
     </div>
   </div>
@@ -873,9 +873,8 @@ function buildStatusChart(data){
       datasets:[{
         data:[map.Completed,map.Pending,map.Returned],
         backgroundColor:[PALETTE[1]+'cc',PALETTE[2]+'cc',PALETTE[3]+'cc'],
-        borderColor:[PALETTE[1],PALETTE[2],PALETTE[3]],
-        borderWidth:2,hoverOffset:6,
-        borderColor: isDark()?'#1a1d27':'#fff'
+        borderColor: isDark()?'#1a1d27':'#fff',
+        borderWidth:2,hoverOffset:6
       }]
     },
     options:{
@@ -1180,7 +1179,6 @@ document.querySelectorAll('.chip-group').forEach(group=>{
    CONTROLS
 ═══════════════════════════════════════════════ */
 function setTrendMode(btn, mode){
-  document.querySelectorAll('#trendChart').forEach(()=>{});
   btn.parentElement.querySelectorAll('.toggle-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   state.trendMode=mode;
