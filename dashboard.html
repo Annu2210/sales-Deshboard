@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional Sales Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: fadeIn 0.6s ease-in;
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            background: linear-gradient(135deg, #00d4ff 0%, #7b2ff7 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .subtitle {
+            color: #b0b7d4;
+            font-size: 1.1rem;
+            letter-spacing: 0.5px;
+        }
+
+        /* Filter Section */
+        .filter-section {
+            background: rgba(20, 25, 50, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 35px;
+            border: 2px solid rgba(0, 212, 255, 0.2);
+            animation: slideDown 0.6s ease-out;
+            box-shadow: 0 8px 32px rgba(0, 212, 255, 0.1);
+        }
+
+        .filter-title {
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            color: #00d4ff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        label {
+            font-size: 0.9rem;
+            color: #b0b7d4;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        select {
+            padding: 12px 15px;
+            border: 2px solid rgba(0, 212, 255, 0.3);
+            border-radius: 8px;
+            background: rgba(10, 14, 39, 0.9);
+            color: #fff;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        select:hover {
+            border-color: rgba(0, 212, 255, 0.6);
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.2);
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #00d4ff;
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
+            background: rgba(10, 14, 39, 0.95);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 15px;
+        }
+
+        button {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .reset-btn {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff8787 100%);
+            color: white;
+        }
+
+        .reset-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.4);
+        }
+
+        /* KPI Cards Section */
+        .kpi-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 35px;
+            animation: fadeIn 0.8s ease-in;
+        }
+
+        .kpi-card {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, rgba(123, 47, 247, 0.1) 100%);
+            border: 2px solid rgba(0, 212, 255, 0.3);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 32px rgba(0, 212, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(0, 212, 255, 0.6);
+            box-shadow: 0 12px 40px rgba(0, 212, 255, 0.3);
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .kpi-card:hover::before {
+            left: 100%;
+        }
+
+        .kpi-label {
+            font-size: 0.9rem;
+            color: #b0b7d4;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .kpi-value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #00d4ff 0%, #7b2ff7 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .kpi-icon {
+            font-size: 2.5rem;
+            margin-top: 10px;
+            opacity: 0.7;
+        }
+
+        /* Charts Section */
+        .charts-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 25px;
+            margin-bottom: 35px;
+            animation: fadeIn 1s ease-in;
+        }
+
+        .chart-container {
+            background: rgba(20, 25, 50, 0.7);
+            border: 2px solid rgba(0, 212, 255, 0.2);
+            border-radius: 15px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 212, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .chart-container:hover {
+            border-color: rgba(0, 212, 255, 0.5);
+            box-shadow: 0 12px 40px rgba(0, 212, 255, 0.2);
+        }
+
+        .chart-title {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            color: #00d4ff;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 350px;
+        }
+
+        /* Wide Charts */
+        .chart-full-width {
+            grid-column: 1 / -1;
+        }
+
+        .chart-full-width .chart-wrapper {
+            height: 320px;
+        }
+
+        /* Top Products Section */
+        .top-products {
+            background: rgba(20, 25, 50, 0.7);
+            border: 2px solid rgba(0, 212, 255, 0.2);
+            border-radius: 15px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 212, 255, 0.1);
+        }
+
+        .podium {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 20px;
+            margin-top: 30px;
+            height: 300px;
+        }
+
+        .podium-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            flex: 1;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        .podium-item:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .podium-item:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .podium-item:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        .medal {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .podium-bar {
+            width: 80px;
+            border-radius: 10px 10px 0 0;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            margin-bottom: 15px;
+            position: relative;
+            min-height: 100px;
+        }
+
+        .podium-bar.first {
+            background: linear-gradient(180deg, #ffd700 0%, #ffed4e 100%);
+            height: 300px;
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.4);
+        }
+
+        .podium-bar.second {
+            background: linear-gradient(180deg, #c0c0c0 0%, #e8e8e8 100%);
+            height: 220px;
+            box-shadow: 0 10px 30px rgba(192, 192, 192, 0.3);
+        }
+
+        .podium-bar.third {
+            background: linear-gradient(180deg, #cd7f32 0%, #d4a574 100%);
+            height: 150px;
+            box-shadow: 0 10px 30px rgba(205, 127, 50, 0.3);
+        }
+
+        .podium-label {
+            color: #b0b7d4;
+            font-size: 0.9rem;
+            margin-top: 10px;
+            max-width: 100px;
+            word-wrap: break-word;
+        }
+
+        .podium-value {
+            color: #00d4ff;
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-top: 5px;
+        }
+
+        /* Leaderboard */
+        .leaderboard {
+            background: rgba(20, 25, 50, 0.7);
+            border: 2px solid rgba(0, 212, 255, 0.2);
+            border-radius: 15px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 212, 255, 0.1);
+        }
+
+        .leaderboard-title {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            color: #00d4ff;
+            font-weight: 600;
+        }
+
+        .leaderboard-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 12px;
+            background: rgba(0, 212, 255, 0.05);
+            border-left: 4px solid #00d4ff;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .leaderboard-item:hover {
+            background: rgba(0, 212, 255, 0.1);
+            transform: translateX(5px);
+        }
+
+        .rank-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-right: 15px;
+            background: linear-gradient(135deg, #00d4ff 0%, #7b2ff7 100%);
+            color: white;
+        }
+
+        .leaderboard-info {
+            flex: 1;
+        }
+
+        .leaderboard-name {
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+
+        .leaderboard-amount {
+            color: #b0b7d4;
+            font-size: 0.9rem;
+        }
+
+        .leaderboard-value {
+            color: #00d4ff;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+
+            .chart-full-width {
+                grid-column: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .filter-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .kpi-section {
+                grid-template-columns: 1fr;
+            }
+
+            .kpi-value {
+                font-size: 1.8rem;
+            }
+
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+
+            .podium {
+                height: 250px;
+            }
+
+            .podium-bar.first {
+                height: 250px;
+            }
+
+            .podium-bar.second {
+                height: 180px;
+            }
+
+            .podium-bar.third {
+                height: 120px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1>📊 Sales Dashboard</h1>
+            <p class="subtitle">Real-time Sales Analytics & Performance Metrics</p>
+        </header>
+
+        <!-- Filter Section -->
+        <div class="filter-section">
+            <div class="filter-title">🎯 Filter Dashboard</div>
+            <div class="filter-grid">
+                <div class="filter-group">
+                    <label for="cityFilter">City</label>
+                    <select id="cityFilter">
+                        <option value="">All Cities</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="monthFilter">Month</label>
+                    <select id="monthFilter">
+                        <option value="">All Months</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="productFilter">Product</label>
+                    <select id="productFilter">
+                        <option value="">All Products</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="paymentFilter">Payment Mode</label>
+                    <select id="paymentFilter">
+                        <option value="">All Payment Modes</option>
+                    </select>
+                </div>
+            </div>
+            <div class="button-group">
+                <button class="reset-btn" onclick="resetFilters()">🔄 Reset All Filters</button>
+            </div>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="kpi-section">
+            <div class="kpi-card">
+                <div class="kpi-label">💰 Total Revenue</div>
+                <div class="kpi-value" id="totalRevenue">0</div>
+                <div class="kpi-icon">₹</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">💳 Online Revenue</div>
+                <div class="kpi-value" id="onlineRevenue">0</div>
+                <div class="kpi-icon">🌐</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">🏪 Offline Revenue</div>
+                <div class="kpi-value" id="offlineRevenue">0</div>
+                <div class="kpi-icon">🏢</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">📦 Total Orders</div>
+                <div class="kpi-value" id="totalOrders">0</div>
+                <div class="kpi-icon">📊</div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="charts-section">
+            <!-- Revenue by Month -->
+            <div class="chart-container chart-full-width">
+                <div class="chart-title">📈 Revenue Trend by Month</div>
+                <div class="chart-wrapper">
+                    <canvas id="revenueByMonthChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Revenue by Product -->
+            <div class="chart-container">
+                <div class="chart-title">📦 Revenue by Product</div>
+                <div class="chart-wrapper">
+                    <canvas id="revenueByProductChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Payment Mode Breakdown -->
+            <div class="chart-container">
+                <div class="chart-title">💳 Payment Mode Distribution</div>
+                <div class="chart-wrapper">
+                    <canvas id="paymentModeChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Revenue by City -->
+            <div class="chart-container chart-full-width">
+                <div class="chart-title">🏙️ Revenue by City</div>
+                <div class="chart-wrapper">
+                    <canvas id="revenueByCityChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Top 3 Products -->
+            <div class="chart-container">
+                <div class="chart-title">🥇 Top 3 Selling Products</div>
+                <div class="top-products">
+                    <div class="podium" id="podium">
+                        <!-- Podium items will be inserted here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top 3 Sellers -->
+            <div class="chart-container">
+                <div class="leaderboard">
+                    <div class="leaderboard-title">🏆 Top 3 Sellers</div>
+                    <div id="leaderboard">
+                        <!-- Leaderboard items will be inserted here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allData = [];
+        let charts = {};
+
+        // Load CSV data
+        async function loadData() {
+            try {
+                const response = await fetch('sales_data.csv');
+                const csvText = await response.text();
+                
+                Papa.parse(csvText, {
+                    header: true,
+                    skipEmptyLines: true,
+                    complete: function(results) {
+                        allData = results.data.filter(row => row.Date);
+                        initializeFilters();
+                        updateDashboard();
+                    },
+                    error: function(error) {
+                        console.error('CSV parsing error:', error);
+                        // Use sample data if CSV fails
+                        loadSampleData();
+                    }
+                });
+            } catch (error) {
+                console.error('Error loading CSV:', error);
+                loadSampleData();
+            }
+        }
+
+        // Sample data for fallback
+        function loadSampleData() {
+            allData = [
+                {Date: 'January', City: 'Mumbai', Product: 'Laptop', Revenue: '45000', Orders: '5', PaymentMode: 'Online', Seller: 'Raj Kumar'},
+                {Date: 'January', City: 'Delhi', Product: 'Mobile', Revenue: '25000', Orders: '10', PaymentMode: 'Offline', Seller: 'Priya Singh'},
+                {Date: 'January', City: 'Bangalore', Product: 'Tablet', Revenue: '18000', Orders: '6', PaymentMode: 'Online', Seller: 'Amit Patel'},
+                {Date: 'February', City: 'Mumbai', Product: 'Laptop', Revenue: '52000', Orders: '6', PaymentMode: 'Online', Seller: 'Raj Kumar'},
+                {Date: 'February', City: 'Chennai', Product: 'Headphones', Revenue: '15000', Orders: '8', PaymentMode: 'Offline', Seller: 'Vikram Reddy'},
+                {Date: 'March', City: 'Delhi', Product: 'Laptop', Revenue: '48000', Orders: '5', PaymentMode: 'Offline', Seller: 'Raj Kumar'},
+                {Date: 'April', City: 'Delhi', Product: 'Mobile', Revenue: '42000', Orders: '14', PaymentMode: 'Online', Seller: 'Priya Singh'},
+                {Date: 'May', City: 'Mumbai', Product: 'Monitor', Revenue: '28000', Orders: '4', PaymentMode: 'Online', Seller: 'Vikram Reddy'},
+                {Date: 'June', City: 'Chennai', Product: 'Laptop', Revenue: '50000', Orders: '5', PaymentMode: 'Offline', Seller: 'Raj Kumar'},
+            ];
+            initializeFilters();
+            updateDashboard();
+        }
+
+        // Initialize filter dropdowns
+        function initializeFilters() {
+            const cities = [...new Set(allData.map(d => d.City))].sort();
+            const months = [...new Set(allData.map(d => d.Date))];
+            const products = [...new Set(allData.map(d => d.Product))].sort();
+            const paymentModes = [...new Set(allData.map(d => d.PaymentMode))].sort();
+
+            populateSelect('cityFilter', cities);
+            populateSelect('monthFilter', months);
+            populateSelect('productFilter', products);
+            populateSelect('paymentFilter', paymentModes);
+
+            // Add event listeners
+            document.getElementById('cityFilter').addEventListener('change', updateDashboard);
+            document.getElementById('monthFilter').addEventListener('change', updateDashboard);
+            document.getElementById('productFilter').addEventListener('change', updateDashboard);
+            document.getElementById('paymentFilter').addEventListener('change', updateDashboard);
+        }
+
+        function populateSelect(selectId, options) {
+            const select = document.getElementById(selectId);
+            options.forEach(option => {
+                const opt = document.createElement('option');
+                opt.value = option;
+                opt.textContent = option;
+                select.appendChild(opt);
+            });
+        }
+
+        // Get filtered data
+        function getFilteredData() {
+            const city = document.getElementById('cityFilter').value;
+            const month = document.getElementById('monthFilter').value;
+            const product = document.getElementById('productFilter').value;
+            const payment = document.getElementById('paymentFilter').value;
+
+            return allData.filter(row => {
+                return (!city || row.City === city) &&
+                       (!month || row.Date === month) &&
+                       (!product || row.Product === product) &&
+                       (!payment || row.PaymentMode === payment);
+            });
+        }
+
+        // Update KPI cards
+        function updateKPIs(data) {
+            const totalRevenue = data.reduce((sum, row) => sum + parseInt(row.Revenue || 0), 0);
+            const onlineRevenue = data.filter(row => row.PaymentMode === 'Online')
+                                      .reduce((sum, row) => sum + parseInt(row.Revenue || 0), 0);
+            const offlineRevenue = data.filter(row => row.PaymentMode === 'Offline')
+                                       .reduce((sum, row) => sum + parseInt(row.Revenue || 0), 0);
+            const totalOrders = data.reduce((sum, row) => sum + parseInt(row.Orders || 0), 0);
+
+            document.getElementById('totalRevenue').textContent = '₹' + totalRevenue.toLocaleString();
+            document.getElementById('onlineRevenue').textContent = '₹' + onlineRevenue.toLocaleString();
+            document.getElementById('offlineRevenue').textContent = '₹' + offlineRevenue.toLocaleString();
+            document.getElementById('totalOrders').textContent = totalOrders.toLocaleString();
+        }
+
+        // Revenue by Month Chart
+        function updateRevenueByMonth(data) {
+            const groupedByMonth = {};
+            const monthOrder = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+            
+            data.forEach(row => {
+                groupedByMonth[row.Date] = (groupedByMonth[row.Date] || 0) + parseInt(row.Revenue || 0);
+            });
+
+            const sortedMonths = monthOrder.filter(m => groupedByMonth[m]);
+            const revenues = sortedMonths.map(m => groupedByMonth[m]);
+
+            const ctx = document.getElementById('revenueByMonthChart').getContext('2d');
+            
+            if (charts.revenueByMonth) charts.revenueByMonth.destroy();
+            
+            charts.revenueByMonth = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: sortedMonths,
+                    datasets: [{
+                        label: 'Revenue (₹)',
+                        data: revenues,
+                        borderColor: '#00d4ff',
+                        backgroundColor: 'rgba(0, 212, 255, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 6,
+                        pointBackgroundColor: '#7b2ff7',
+                        pointBorderColor: '#00d4ff',
+                        pointBorderWidth: 2,
+                        pointHoverRadius: 8,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#fff',
+                                font: { size: 12, weight: 'bold' }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: '#00d4ff',
+                            bodyColor: '#fff',
+                            borderColor: '#00d4ff',
+                            borderWidth: 1,
+                            padding: 12,
+                            displayColors: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return '₹' + context.parsed.y.toLocaleString();
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: '#b0b7d4', font: { weight: 'bold' } },
+                            grid: { color: 'rgba(0, 212, 255, 0.1)' }
+                        },
+                        x: {
+                            ticks: { color: '#b0b7d4', font: { weight: 'bold' } },
+                            grid: { color: 'rgba(0, 212, 255, 0.1)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Revenue by Product Chart
+        function updateRevenueByProduct(data) {
+            const groupedByProduct = {};
+            
+            data.forEach(row => {
+                groupedByProduct[row.Product] = (groupedByProduct[row.Product] || 0) + parseInt(row.Revenue || 0);
+            });
+
+            const products = Object.keys(groupedByProduct).sort((a, b) => groupedByProduct[b] - groupedByProduct[a]);
+            const revenues = products.map(p => groupedByProduct[p]);
+
+            const ctx = document.getElementById('revenueByProductChart').getContext('2d');
+            
+            if (charts.revenueByProduct) charts.revenueByProduct.destroy();
+            
+            charts.revenueByProduct = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: products,
+                    datasets: [{
+                        label: 'Revenue (₹)',
+                        data: revenues,
+                        backgroundColor: [
+                            'rgba(0, 212, 255, 0.8)',
+                            'rgba(123, 47, 247, 0.8)',
+                            'rgba(255, 107, 107, 0.8)',
+                            'rgba(0, 255, 136, 0.8)',
+                            'rgba(255, 193, 7, 0.8)'
+                        ],
+                        borderColor: ['#00d4ff', '#7b2ff7', '#ff6b6b', '#00ff88', '#ffc107'],
+                        borderWidth: 2,
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: {
+                            labels: { color: '#fff', font: { size: 12, weight: 'bold' } }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            bodyColor: '#fff',
+                            displayColors: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return '₹' + context.parsed.x.toLocaleString();
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: '#b0b7d4', font: { weight: 'bold' } },
+                            grid: { color: 'rgba(0, 212, 255, 0.1)' }
+                        },
+                        y: {
+                            ticks: { color: '#b0b7d4', font: { weight: 'bold' } },
+                            grid: { color: 'rgba(0, 212, 255, 0.1)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Payment Mode Chart
+        function updatePaymentMode(data) {
+            const groupedByPayment = {};
+            
+            data.forEach(row => {
+                groupedByPayment[row.PaymentMode] = (groupedByPayment[row.PaymentMode] || 0) + parseInt(row.Revenue || 0);
+            });
+
+            const payments = Object.keys(groupedByPayment);
+            const revenues = payments.map(p => groupedByPayment[p]);
+
+            const ctx = document.getElementById('paymentModeChart').getContext('2d');
+            
+            if (charts.paymentMode) charts.paymentMode.destroy();
+            
+            charts.paymentMode = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: payments,
+                    datasets: [{
+                        data: revenues,
+                        backgroundColor: [
+                            'rgba(0, 212, 255, 0.8)',
+                            'rgba(123, 47, 247, 0.8)'
+                        ],
+                        borderColor: ['#00d4ff', '#7b2ff7'],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#fff', font: { size: 12, weight: 'bold' } }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            bodyColor: '#fff',
+                            displayColors: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return '₹' + context.parsed.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Revenue by City Chart
+        function updateRevenueByCity(data) {
+            const groupedByCity = {};
+            
+            data.forEach(row => {
+                groupedByCity[row.City] = (groupedByCity[row.City] || 0) + parseInt(row.Revenue || 0);
+            });
+
+            const cities = Object.keys(groupedByCity).sort((a, b) => groupedByCity[b] - groupedByCity[a]);
+            const revenues = cities.map(c => groupedByCity[c]);
+
+            const ctx = document.getElementById('revenueByCityChart').getContext('2d');
+            
+            if (charts.revenueByCity) charts.revenueByCity.destroy();
+            
+            charts.revenueByCity = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: cities,
+                    datasets: [{
+                        label: 'Revenue (₹)',
+                        data: revenues,
+                        backgroundColor: 'rgba(0, 212, 255, 0.8)',
+                        borderColor: '#00d4ff',
+                        borderWidth: 2,
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#fff', font: { size: 12, weight: 'bold' } }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            bodyColor: '#fff',
+                            displayColors: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return '₹' + context.parsed.y.toLocaleString();
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: '#b0b7d4', font: { weight: 'bold' } },
+                            grid: { color: 'rgba(0, 212, 255, 0.1)' }
+                        },
+                        x: {
+                            ticks: { color: '#b0b7d4', font: { weight: 'bold' } },
+                            grid: { color: 'rgba(0, 212, 255, 0.1)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Top 3 Products Podium
+        function updateTopProducts(data) {
+            const groupedByProduct = {};
+            
+            data.forEach(row => {
+                groupedByProduct[row.Product] = (groupedByProduct[row.Product] || 0) + parseInt(row.Revenue || 0);
+            });
+
+            const topProducts = Object.entries(groupedByProduct)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 3);
+
+            const podium = document.getElementById('podium');
+            podium.innerHTML = '';
+
+            const medals = ['🥇', '🥈', '🥉'];
+            const positions = ['first', 'second', 'third'];
+
+            topProducts.forEach((product, index) => {
+                const item = document.createElement('div');
+                item.className = 'podium-item';
+                item.innerHTML = `
+                    <div class="medal">${medals[index]}</div>
+                    <div class="podium-bar ${positions[index]}"></div>
+                    <div class="podium-label">${product[0]}</div>
+                    <div class="podium-value">₹${product[1].toLocaleString()}</div>
+                `;
+                podium.appendChild(item);
+            });
+        }
+
+        // Top 3 Sellers Leaderboard
+        function updateTopSellers(data) {
+            const groupedBySeller = {};
+            
+            data.forEach(row => {
+                groupedBySeller[row.Seller] = (groupedBySeller[row.Seller] || 0) + parseInt(row.Revenue || 0);
+            });
+
+            const topSellers = Object.entries(groupedBySeller)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 3);
+
+            const leaderboard = document.getElementById('leaderboard');
+            leaderboard.innerHTML = '';
+
+            topSellers.forEach((seller, index) => {
+                const item = document.createElement('div');
+                item.className = 'leaderboard-item';
+                item.innerHTML = `
+                    <div class="rank-badge">${index + 1}</div>
+                    <div class="leaderboard-info">
+                        <div class="leaderboard-name">${seller[0]}</div>
+                        <div class="leaderboard-amount">Total Revenue</div>
+                    </div>
+                    <div class="leaderboard-value">₹${seller[1].toLocaleString()}</div>
+                `;
+                leaderboard.appendChild(item);
+            });
+        }
+
+        // Main update function
+        function updateDashboard() {
+            const filteredData = getFilteredData();
+            
+            updateKPIs(filteredData);
+            updateRevenueByMonth(filteredData);
+            updateRevenueByProduct(filteredData);
+            updatePaymentMode(filteredData);
+            updateRevenueByCity(filteredData);
+            updateTopProducts(filteredData);
+            updateTopSellers(filteredData);
+        }
+
+        // Reset filters
+        function resetFilters() {
+            document.getElementById('cityFilter').value = '';
+            document.getElementById('monthFilter').value = '';
+            document.getElementById('productFilter').value = '';
+            document.getElementById('paymentFilter').value = '';
+            updateDashboard();
+        }
+
+        // Initialize on page load
+        window.addEventListener('load', loadData);
+    </script>
+</body>
+</html>
